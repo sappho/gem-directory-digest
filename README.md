@@ -5,7 +5,7 @@ Creates a SHA256 digest of all of the files in a directory, and has simple direc
 
 Simple to use:
 
-    require 'directory-digest'
+    require 'directory-digest/digest'
     digest = Digest.sha256('/opt/app')
 
 Here `digest` is a `Digest` object which contains a SHA256 digest of the content of all of all of the files in the directory, and a hash of digests of each individual file.

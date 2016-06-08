@@ -78,5 +78,28 @@ module DirectoryDigest
         expect(differences[:unchanged].count).to eq 4
       end
     end
+
+    describe '#to_json' do
+      it 'returns valid JSON' do
+        digest = Digest.sha256('spec/data')
+        expect(digest.to_json).to match(/^{.*?e4314adaaaec5fd9392651f770d132f5eda6b104ed371d5ac5bbc8cb30e87fba.*}$/m)
+      end
+    end
+
+    describe '.from_json' do
+      it 'parses valid JSON' do
+        json = {
+          directory_digest: '515613f6a36f6d313c99db44fe96c019ec729474fa53d44ab2a13b3eea09634b',
+          file_digests: {
+            '/test-path' => '792524edd412193c9d2e53734a5e95ee67fc3e502e64dc6f8e2ea53e87d30ad8'
+          }
+        }.to_json
+        digest = Digest.from_json(json)
+        expect(digest.directory_digest).to eq '515613f6a36f6d313c99db44fe96c019ec729474fa53d44ab2a13b3eea09634b'
+        expect(digest.file_digests.count).to eq 1
+        expect(digest.file_digests['/test-path'])
+          .to eq '792524edd412193c9d2e53734a5e95ee67fc3e502e64dc6f8e2ea53e87d30ad8'
+      end
+    end
   end
 end

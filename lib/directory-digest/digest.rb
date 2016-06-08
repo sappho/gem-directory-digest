@@ -1,4 +1,5 @@
 require 'openssl'
+require 'json'
 
 module DirectoryDigest
   # DirectoryDigest::Digest - Creates a SHA256 digest of a directory's content
@@ -50,6 +51,15 @@ module DirectoryDigest
         changed: other.file_digests.select { |path, digest| file_digests.key?(path) && digest != file_digests[path] },
         unchanged: other.file_digests.select { |path, digest| file_digests.key?(path) && digest == file_digests[path] }
       }
+    end
+
+    def to_json
+      JSON.pretty_generate(directory_digest: directory_digest, file_digests: file_digests)
+    end
+
+    def self.from_json(json)
+      json = JSON.parse(json)
+      Digest.new(json['directory_digest'], json['file_digests'])
     end
   end
 end
