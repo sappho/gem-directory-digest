@@ -84,6 +84,7 @@ module DirectoryDigest
         files_deleted += 1
       end
       log.call("synchronized - files copied: #{files_copied} - files deleted: #{files_deleted}")
+      { files_copied: files_copied, files_deleted: files_deleted }
     end
 
     def to_json
