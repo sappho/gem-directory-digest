@@ -16,6 +16,7 @@ module DirectoryDigest
     end
 
     def self.sha256(directory, glob = '**/*', includes = [])
+      FileUtils.makedirs(directory) unless Dir.exist?(directory)
       directory_digest = OpenSSL::Digest::SHA256.new
       file_digests = {}
       Dir["#{directory}/#{glob}"].each do |filename|
