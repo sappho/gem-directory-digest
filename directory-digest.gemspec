@@ -4,7 +4,7 @@ $LOAD_PATH << File.expand_path('../lib', __FILE__)
 
 Gem::Specification.new do |specification|
   specification.name = 'directory-digest'
-  specification.version = '1.0.6'
+  specification.version = '1.0.7'
   specification.authors = ['Andrew Heald']
   specification.email = 'andrew@heald.uk'
   specification.homepage = 'https://github.com/sappho/gem-directory-digest'

@@ -13,6 +13,7 @@ module DirectoryDigest
       @directory = directory
       @directory_digest = directory_digest
       @file_digests = file_digests
+      freeze
     end
 
     def self.sha256(directory, glob = '**/*', includes = [])
@@ -88,6 +89,11 @@ module DirectoryDigest
 
   # DirectoryDigest::MirrorActions - Provider for standard mirror making activities
   class MirrorActions
+    def initialize(chunk_size = 4096)
+      @chunk_size = chunk_size
+      freeze
+    end
+
     def create_directory(directory)
       FileUtils.makedirs(directory)
     end
@@ -95,7 +101,7 @@ module DirectoryDigest
     def copy_file(source, destination)
       File.open(source, 'rb') do |source_file|
         File.open(destination, 'wb') do |destination_file|
-          destination_file.write(source_file.read(4096)) until source_file.eof?
+          destination_file.write(source_file.read(@chunk_size)) until source_file.eof?
         end
       end
     end
