@@ -1,7 +1,7 @@
 gem-directory-digest
 --------------------
 
-Creates a SHA256 digest of all of the files in a directory, and has simple directory comparison features.
+Creates a SHA256 digest of all of the files in a directory, and has simple directory comparison and mirroring features.
 
 Simple to use:
 
@@ -48,4 +48,4 @@ It is possible to override the file operations by extending `MirrorActions`. See
 License
 -------
 
-This rubygem is distributed under the MIT license - see the LICENSE file in the root directory of the project.
+This rubygem is distributed under the MIT license - see the `LICENSE` file in the root directory of the project.
