@@ -85,15 +85,15 @@ module DirectoryDigest
         FileUtils.makedirs('test')
         first_digest = Digest.sha256('spec/test-data/data')
         second_digest = Digest.sha256('test')
-        second_digest.mirror_from(first_digest, proc { |message| puts message })
+        second_digest.mirror_from(first_digest, LogMirrorActions.new)
         second_digest = Digest.sha256('test')
         expect(first_digest == second_digest).to eq true
         first_digest = Digest.sha256('spec/test-data/alt-data')
-        second_digest.mirror_from(first_digest, proc { |message| puts message })
+        second_digest.mirror_from(first_digest, LogMirrorActions.new)
         second_digest = Digest.sha256('test')
         expect(first_digest == second_digest).to eq true
         first_digest = Digest.sha256('spec/test-data/empty')
-        second_digest.mirror_from(first_digest, proc { |message| puts message })
+        second_digest.mirror_from(first_digest, LogMirrorActions.new)
         second_digest = Digest.sha256('test')
         expect(first_digest == second_digest).to eq true
       end
@@ -122,6 +122,23 @@ module DirectoryDigest
         expect(digest.file_digests['/test-path'])
           .to eq '792524edd412193c9d2e53734a5e95ee67fc3e502e64dc6f8e2ea53e87d30ad8'
       end
+    end
+  end
+
+  class LogMirrorActions < MirrorActions
+    def create_directory(directory)
+      puts "creating directory #{directory}"
+      super(directory)
+    end
+
+    def copy_file(source, destination)
+      puts "copying #{source} to #{destination}"
+      super(source, destination)
+    end
+
+    def delete_file(filename)
+      puts "deleting #{filename}"
+      super(filename)
     end
   end
 end

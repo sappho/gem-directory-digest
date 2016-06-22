@@ -57,8 +57,7 @@ module DirectoryDigest
       }
     end
 
-    def mirror_from(other, log = proc { |_| })
-      log.call("synchronizing #{other.directory} to #{directory}")
+    def mirror_from(other, actions = MirrorActions.new)
       files_copied = 0
       files_deleted = 0
       changes = changes_relative_to(other)
@@ -66,25 +65,14 @@ module DirectoryDigest
         source_path = "#{other.directory}#{path}"
         destination_path = "#{directory}#{path}"
         destination_directory = File.dirname(destination_path)
-        unless Dir.exist?(destination_directory)
-          log.call("create directory #{destination_directory}")
-          FileUtils.makedirs(destination_directory)
-        end
-        log.call("copy #{source_path} to #{destination_path}")
-        File.open(source_path, 'rb') do |source_file|
-          File.open(destination_path, 'wb') do |destination_file|
-            destination_file.write(source_file.read(4096)) until source_file.eof?
-          end
-        end
+        actions.create_directory(destination_directory) unless Dir.exist?(destination_directory)
+        actions.copy_file(source_path, destination_path)
         files_copied += 1
       end
       changes[:added].each do |path, _|
-        destination_path = "#{directory}#{path}"
-        log.call("delete #{destination_path}")
-        File.delete(destination_path)
+        actions.delete_file("#{directory}#{path}")
         files_deleted += 1
       end
-      log.call("synchronized - files copied: #{files_copied} - files deleted: #{files_deleted}")
       { files_copied: files_copied, files_deleted: files_deleted }
     end
 
@@ -95,6 +83,25 @@ module DirectoryDigest
     def self.from_json(json)
       json = JSON.parse(json)
       Digest.new(json['directory'], json['directory_digest'], json['file_digests'])
+    end
+  end
+
+  # DirectoryDigest::MirrorActions - Provider for standard mirror making activities
+  class MirrorActions
+    def create_directory(directory)
+      FileUtils.makedirs(directory)
+    end
+
+    def copy_file(source, destination)
+      File.open(source, 'rb') do |source_file|
+        File.open(destination, 'wb') do |destination_file|
+          destination_file.write(source_file.read(4096)) until source_file.eof?
+        end
+      end
+    end
+
+    def delete_file(filename)
+      File.delete(filename)
     end
   end
 end
