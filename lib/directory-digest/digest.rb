@@ -10,10 +10,9 @@ module DirectoryDigest
     attr_reader :file_digests
 
     def initialize(directory, directory_digest, file_digests)
-      @directory = directory
-      @directory_digest = directory_digest
-      @file_digests = file_digests
-      freeze
+      @directory = directory.freeze
+      @directory_digest = directory_digest.freeze
+      @file_digests = file_digests.freeze
     end
 
     def self.sha256(directory, glob = '**/*', includes = [])
@@ -91,7 +90,6 @@ module DirectoryDigest
   class MirrorActions
     def initialize(chunk_size = 4096)
       @chunk_size = chunk_size
-      freeze
     end
 
     def create_directory(directory)
