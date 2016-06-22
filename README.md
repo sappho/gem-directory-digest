@@ -37,6 +37,14 @@ This will return a hash that looks like this:
 
 Each of the four top level keys contain a hash of the files, and their digests, that fall into that category.
 
+To mirror one directory to another, both of which must exist beforehand, do this:
+
+    digest2.mirror_from(digest1)
+
+This copies and deletes files in `/opt/app2` so that it ends up with the same content as `/opt/app1`. But note that directories are only created as needed and never deleted, so there might be empty directories in the destination after calling `mirror_from`.
+
+It is possible to override the file operations by extending `MirrorActions`. See `spec/directory-digest/digest_spec.rb` for an example that logs each action to the console.
+
 License
 -------
 
