@@ -19,7 +19,7 @@ More complex filtering can be applied by adding a third parameter that can be ei
     digest1 = Digest.sha256('/opt/app', '**/*', -> { |path| path =~ /test/ })
     digest2 = Digest.sha256('/opt/app', '**/*', %w(-. +test))
 
-Both of these will produce equal digests. The first variant includes any file that has `test` anywhere in the file's path. The second variant applies each regex string (minus the first character) in turn to each file's path and uses the first character of the regex string to determine if the file is included (plus sign) or excluded (minus sign).
+Both of these will produce equal digests. The first variant includes any file that has `test` anywhere in the file's path. The second variant applies each regex string (minus the first character) in turn to each file's path and uses the first character of the regex string to determine if the file is included (plus sign) or excluded (minus sign). When there are no regex matches the file is included by default, so be sure to start your regex array with `-.` for a default of excluding all files.
 
 You can compare directories, to check for identical content, like this:
 
