@@ -30,7 +30,7 @@ module DirectoryDigest
       end
 
       it 'creates a SHA256 digest of some of the files in a directory (with an exclude and cancelling include)' do
-        digest = Digest.sha256('spec/test-data/data', '**/*', ['-.*', '+\.bin$'])
+        digest = Digest.sha256('spec/test-data/data', '**/*', %w(-. +\.bin$))
         expect(digest.directory_digest).to eq '07076f7ddd861e2ef6b0510b6d8f08cfcc409380e90ecc2a3070b42db356305c'
         expect(digest.file_digests.count).to eq 2
         expect(digest.file_digests['/test-4096.bin'])

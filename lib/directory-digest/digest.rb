@@ -3,7 +3,7 @@ require 'json'
 require 'fileutils'
 
 module DirectoryDigest
-  # DirectoryDigest::Digest - Creates a SHA256 digest of a directory's content
+  # DirectoryDigest::Digest - Creates a SHA256 digest of a directory's content.
   class Digest
     attr_reader :directory
     attr_reader :directory_digest
@@ -15,18 +15,19 @@ module DirectoryDigest
       @file_digests = file_digests.freeze
     end
 
-    def self.sha256(directory, glob = '**/*', includes = [])
-      FileUtils.makedirs(directory) unless Dir.exist?(directory)
+    def self.sha256(directory, glob = '**/*', include = proc { true })
+      if include.is_a?(Array)
+        regex_list = include
+        include = lambda do |path|
+          matches = regex_list.select { |regex| regex.size > 1 && path =~ /#{regex[1..-1]}/ }
+          matches.count.zero? || matches.last[0] == '+'
+        end
+      end
       directory_digest = OpenSSL::Digest::SHA256.new
       file_digests = {}
       Dir["#{directory}/#{glob}"].each do |filename|
-        next unless File.file?(filename)
-        path = filename[directory.size, 99_999]
-        included = true
-        includes.each do |include|
-          included = include[0] == '+' if include.size > 1 && path =~ /#{include[1, 99_999]}/i
-        end
-        next unless included
+        path = filename[directory.size..-1]
+        next unless File.file?(filename) && include.call(path)
         file_digest = OpenSSL::Digest::SHA256.new
         File.open(filename, 'rb') do |file|
           until file.eof?
@@ -86,7 +87,7 @@ module DirectoryDigest
     end
   end
 
-  # DirectoryDigest::MirrorActions - Provider for standard mirror making activities
+  # DirectoryDigest::MirrorActions - Provider for standard mirror making activities.
   class MirrorActions
     def initialize(chunk_size = 4096)
       @chunk_size = chunk_size
