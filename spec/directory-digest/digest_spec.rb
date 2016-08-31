@@ -61,22 +61,24 @@ module DirectoryDigest
         first_digest = Digest.sha256('spec/test-data/alt-data')
         second_digest = Digest.sha256('spec/test-data/data')
         differences = first_digest.changes_relative_to(second_digest)
-        expect(differences.count).to eq 4
+        expect(differences.count).to eq 5
         expect(differences[:added].count).to eq 1
         expect(differences[:removed].count).to eq 1
         expect(differences[:changed].count).to eq 1
         expect(differences[:unchanged].count).to eq 2
+        expect(differences[:excluded].count).to eq 0
       end
 
       it 'creates a valid report on the lack of differences between directories' do
         first_digest = Digest.sha256('spec/test-data/data')
         second_digest = Digest.sha256('spec/test-data/data')
         differences = first_digest.changes_relative_to(second_digest)
-        expect(differences.count).to eq 4
+        expect(differences.count).to eq 5
         expect(differences[:added].count).to eq 0
         expect(differences[:removed].count).to eq 0
         expect(differences[:changed].count).to eq 0
         expect(differences[:unchanged].count).to eq 4
+        expect(differences[:excluded].count).to eq 0
       end
     end
 

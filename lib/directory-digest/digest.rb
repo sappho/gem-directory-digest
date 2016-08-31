@@ -8,11 +8,13 @@ module DirectoryDigest
     attr_reader :directory
     attr_reader :directory_digest
     attr_reader :file_digests
+    attr_reader :files_excluded
 
-    def initialize(directory, directory_digest, file_digests)
+    def initialize(directory, directory_digest, file_digests, files_excluded)
       @directory = directory.freeze
       @directory_digest = directory_digest.freeze
       @file_digests = file_digests.freeze
+      @files_excluded = files_excluded.freeze
     end
 
     def self.sha256(directory, glob = '**/*', include = proc { true })
@@ -25,20 +27,25 @@ module DirectoryDigest
       end
       directory_digest = OpenSSL::Digest::SHA256.new
       file_digests = {}
+      files_excluded = []
       Dir["#{directory}/#{glob}"].each do |filename|
+        next unless File.file?(filename)
         path = filename[directory.size..-1]
-        next unless File.file?(filename) && include.call(path)
-        file_digest = OpenSSL::Digest::SHA256.new
-        File.open(filename, 'rb') do |file|
-          until file.eof?
-            chunk = file.read(4096)
-            directory_digest << chunk
-            file_digest << chunk
+        if include.call(path)
+          file_digest = OpenSSL::Digest::SHA256.new
+          File.open(filename, 'rb') do |file|
+            until file.eof?
+              chunk = file.read(4096)
+              directory_digest << chunk
+              file_digest << chunk
+            end
           end
+          file_digests[path] = file_digest.hexdigest
+        else
+          files_excluded << path
         end
-        file_digests[path] = file_digest.hexdigest
       end
-      Digest.new(directory, directory_digest.hexdigest, file_digests)
+      Digest.new(directory, directory_digest.hexdigest, file_digests, files_excluded)
     end
 
     def ==(other)
@@ -54,36 +61,46 @@ module DirectoryDigest
         added: file_digests.select { |path, _| !other.file_digests.key?(path) },
         removed: other.file_digests.select { |path, _| !file_digests.key?(path) },
         changed: other.file_digests.select { |path, digest| file_digests.key?(path) && digest != file_digests[path] },
-        unchanged: other.file_digests.select { |path, digest| file_digests.key?(path) && digest == file_digests[path] }
+        unchanged: other.file_digests.select { |path, digest| file_digests.key?(path) && digest == file_digests[path] },
+        excluded: files_excluded | other.files_excluded
       }
     end
 
     def mirror_from(other, actions = MirrorActions.new)
-      files_copied = 0
-      files_deleted = 0
       changes = changes_relative_to(other)
-      changes[:removed].merge(changes[:changed]).each do |path, _|
+      to_copy = changes[:removed].merge(changes[:changed])
+      to_copy.keys.each do |path|
         source_path = "#{other.directory}#{path}"
         destination_path = "#{directory}#{path}"
         destination_directory = File.dirname(destination_path)
         actions.create_directory(destination_directory) unless Dir.exist?(destination_directory)
         actions.copy_file(source_path, destination_path)
-        files_copied += 1
       end
-      changes[:added].each do |path, _|
+      to_delete = changes[:added]
+      to_delete.keys.each do |path|
         actions.delete_file("#{directory}#{path}")
-        files_deleted += 1
       end
-      { files_copied: files_copied, files_deleted: files_deleted }
+      {
+        copied: to_copy,
+        deleted: to_delete,
+        unchanged: changes[:unchanged],
+        excluded: changes[:excluded]
+      }
     end
 
     def to_json
-      JSON.pretty_generate(directory: directory, directory_digest: directory_digest, file_digests: file_digests)
+      JSON.pretty_generate(directory: directory,
+                           directory_digest: directory_digest,
+                           file_digests: file_digests,
+                           files_excluded: files_excluded)
     end
 
     def self.from_json(json)
       json = JSON.parse(json)
-      Digest.new(json['directory'], json['directory_digest'], json['file_digests'])
+      Digest.new(json['directory'],
+                 json['directory_digest'],
+                 json['file_digests'],
+                 json['files_excluded'])
     end
   end
 
